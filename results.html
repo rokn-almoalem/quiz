@@ -3,35 +3,46 @@
 <meta name="theme-color" content="#3d8268"><title>نتائج الاختبار — ركن المعلم</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:#eaeef3;color:#16263d;line-height:1.6}
-.w{max-width:560px;margin:0 auto;padding:16px}
-.card{background:#fff;border:1px solid #dde4ec;border-radius:16px;box-shadow:0 6px 24px rgba(22,38,61,.08);padding:18px;margin-bottom:12px}
+body{margin:0;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:#eef1f5;color:#16263d;line-height:1.6}
+.w{max-width:620px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid #dde4ec;border-radius:16px;box-shadow:0 4px 18px rgba(22,38,61,.06);padding:16px;margin-bottom:12px}
 h1{font-size:20px;font-weight:800;margin:0 0 4px}
+h2{font-size:15px;font-weight:800;margin:0 0 10px;color:#3d8268}
 .mut{color:#6b7c8f;font-size:13px}
 input{width:100%;padding:12px;border:1.5px solid #dde4ec;border-radius:10px;font-size:16px;font-family:inherit;text-align:center;margin:10px 0}
 .btn{width:100%;border:none;border-radius:11px;padding:14px;font-weight:800;font-size:15px;font-family:inherit;color:#fff;background:linear-gradient(135deg,#3d8268,#2a9d8f);cursor:pointer}
-.btn2{background:#16263d}
-.row{display:flex;gap:8px;margin-bottom:10px}
-.chip{flex:1;background:#f3f6fa;border:1px solid #dde4ec;border-radius:10px;padding:9px;text-align:center}
-.chip b{display:block;font-size:19px}
-.chip .g{color:#2a9d8f}.chip .o{color:#c17a3a}
-.st{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #eef2f6}
-.st .n{flex:1;font-weight:700}
-.code{background:#0f1b2d;color:#7fd6c2;border-radius:10px;padding:12px;font-size:11px;word-break:break-all;max-height:90px;overflow:auto;margin-top:8px;font-family:monospace}
+.btn2{background:#16263d}.btn3{background:#ef7d3b;color:#1a1200}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+.stat{background:#f3f6fa;border:1px solid #e2e8f0;border-radius:11px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px;color:#2a9d8f}
+.stat.o b{color:#c17a3a}.stat.r b{color:#e05b4a}
+.stat span{font-size:11px;color:#6b7c8f}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 6px;text-align:right;border-bottom:1px solid #eef2f6}
+th{color:#6b7c8f;font-size:12px;font-weight:700}
+td.c,th.c{text-align:center}
+.pill{display:inline-block;font-weight:800;font-size:13px;padding:2px 8px;border-radius:20px}
+.pg{background:#e7f5f3;color:#2a9d8f}.pr{background:#fde8e4;color:#e05b4a}.po{background:#fdf0e3;color:#c17a3a}
+.skrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #eef2f6}
+.skrow .n{flex:1;font-weight:700;font-size:14px}
+.bar{flex:0 0 90px;height:9px;border-radius:6px;background:#e2e8f0;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+.stu{border:1px solid #e6ecf2;border-radius:12px;padding:11px;margin-bottom:8px}
+.stu .h{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.stu .h .nm{flex:1;font-weight:800}
 .err{color:#c0392b;text-align:center;padding:12px}
 .br{display:flex;align-items:center;gap:10px;padding:4px 2px 12px}
 .lg{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#3d8268,#2a9d8f);display:flex;align-items:center;justify-content:center;font-size:18px}
+@media print{.noprint{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ccc}}
 </style></head><body>
 <div class="w">
-<div class="br"><div class="lg">📊</div><div><div style="font-weight:800;font-size:15px">ركن المعلم</div><div style="font-size:11px;color:#6b7c8f">نتائج الاختبار الإلكتروني</div></div></div>
-
-<div class="card">
-<h1>📊 جلب نتائج اختبار</h1>
-<div class="mut">أدخل رقم الاختبار (من تطبيقك) لجلب نتائج الطلاب.</div>
-<input id="eid" placeholder="رقم الاختبار (مثال: q1a2b3...)">
-<button class="btn" id="go">🔄 جلب النتائج</button>
+<div class="br noprint"><div class="lg">📊</div><div><div style="font-weight:800;font-size:15px">ركن المعلم</div><div style="font-size:11px;color:#6b7c8f">نتائج وتحليل الاختبار</div></div></div>
+<div class="card noprint" id="inp">
+<h1>📊 نتائج الاختبار الإلكتروني</h1>
+<div class="mut">أدخل رقم الاختبار (من تطبيقك) لعرض الكشف والتحليل والتقرير.</div>
+<input id="eid" placeholder="رقم الاختبار (مثال: qmrun...)">
+<button class="btn" id="go">🔄 عرض النتائج</button>
 </div>
-
 <div id="out"></div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -40,34 +51,50 @@ var FB={apiKey:"AIzaSyCc99_No-Jly01WpO5jKYbIO0WPApJBLpM",projectId:"rokn-almoale
 function $(i){return document.getElementById(i)}
 function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
 function _n(v){if(!v)return 0;return parseFloat(v.integerValue||v.doubleValue||0)||0}
-function _m(v){var o={};if(v&&v.mapValue&&v.mapValue.fields){var F=v.mapValue.fields;Object.keys(F).forEach(function(k){o[k]=_n(F[k])})}return o}
-var _CODE="";
-// رقم الاختبار من الرابط (#) إن وُجد
+function _s(v){return (v&&v.stringValue)||""}
+function _arr(v){var a=[];if(v&&v.arrayValue&&v.arrayValue.values){v.arrayValue.values.forEach(function(x){if(x.mapValue&&x.mapValue.fields){var F=x.mapValue.fields;a.push({name:_s(F.name),got:_n(F.got),max:_n(F.max)})}})}return a}
 var hid=location.hash.slice(1); if(hid) $('eid').value=decodeURIComponent(hid);
-$('go').onclick=function(){
+$('go').onclick=fetchR;
+function fetchR(){
   var id=($('eid').value||"").trim(); if(!id){ $('out').innerHTML='<div class="card err">اكتب رقم الاختبار أولاً</div>'; return; }
   $('out').innerHTML='<div class="card mut" style="text-align:center">⏳ جاري الجلب…</div>';
   var url="https://firestore.googleapis.com/v1/projects/"+FB.projectId+"/databases/(default)/documents/exams/"+encodeURIComponent(id)+"/results?key="+FB.apiKey+"&pageSize=300";
   fetch(url).then(function(r){return r.json()}).then(function(j){
-    if(j&&j.error){ throw new Error(j.error.message||"خطأ"); }
-    var docs=j.documents||[]; var results=[];
-    docs.forEach(function(d){ var f=d.fields||{}; results.push({ name:(f.name&&f.name.stringValue)||(d.name.split("/").pop()), earned:_n(f.earned), total:_n(f.total), grades:_m(f.grades) }); });
-    render(results);
+    if(j&&j.error) throw new Error(j.error.message||"خطأ");
+    var R=(j.documents||[]).map(function(d){var f=d.fields||{};return{name:_s(f.name)||d.name.split("/").pop(),earned:_n(f.earned),total:_n(f.total),skills:_arr(f.skills)}});
+    render(R);
   }).catch(function(e){ $('out').innerHTML='<div class="card err">تعذّر الجلب: '+E(String(e&&e.message||e))+'<br><span style="font-size:11px;color:#6b7c8f">تأكد من رقم الاختبار والإنترنت</span></div>'; });
-};
-function render(results){
-  if(!results.length){ $('out').innerHTML='<div class="card" style="text-align:center;color:#6b7c8f">لا نتائج بعد — لم يسلّم أحد.</div>'; return; }
-  results.sort(function(a,b){return String(a.name).localeCompare(String(b.name),"ar")});
-  var rows=results.map(function(r){ var pc=r.total?Math.round(r.earned/r.total*100):0; return '<div class="st"><span class="n">'+E(r.name)+'</span><span style="font-weight:800;color:#2a9d8f">'+r.earned+'/'+r.total+'</span><span style="color:#6b7c8f;font-size:12px;width:40px;text-align:left">'+pc+'%</span></div>'; }).join("");
-  // رمز الاستيراد: [[name,{oi:got}],...]
-  var packed=results.map(function(r){return [r.name, r.grades]});
-  try{ _CODE=btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/\+/g,'-').replace(/\//g,'_'); }catch(e){ _CODE=""; }
-  $('out').innerHTML=
-    '<div class="card"><div class="row"><div class="chip"><b class="g">'+results.length+'</b><span class="mut">حلّوا</span></div></div>'+rows+'</div>'
-    +'<div class="card"><div style="font-weight:800;font-size:14px;margin-bottom:4px">📥 رمز الاستيراد للتطبيق</div><div class="mut">انسخ الرمز، وافتح تطبيقك ← تبويب «أونلاين» ← «استيراد بالرمز» ← الصقه.</div>'
-    +'<div class="code" id="cd">'+E(_CODE)+'</div>'
-    +'<button class="btn btn2" style="margin-top:10px" onclick="cp()">📋 نسخ الرمز</button></div>';
 }
-function cp(){ try{ navigator.clipboard.writeText(_CODE); alert("تم نسخ الرمز ✓"); }catch(e){ alert("انسخه يدوياً من الصندوق"); } }
-if(hid) $('go').click();
+function render(R){
+  if(!R.length){ $('out').innerHTML='<div class="card" style="text-align:center;color:#6b7c8f">لا نتائج بعد — لم يسلّم أحد.</div>'; return; }
+  R.sort(function(a,b){return b.earned/(b.total||1) - a.earned/(a.total||1)});
+  var tot=R[0].total||0;
+  var pcts=R.map(function(r){return r.total?r.earned/r.total*100:0});
+  var avg=Math.round(pcts.reduce(function(a,b){return a+b},0)/R.length);
+  var pass=pcts.filter(function(p){return p>=50}).length;
+  var hi=Math.max.apply(null,R.map(function(r){return r.earned})), lo=Math.min.apply(null,R.map(function(r){return r.earned}));
+  var skAgg={};
+  R.forEach(function(r){ r.skills.forEach(function(s){ if(!skAgg[s.name])skAgg[s.name]={got:0,max:0}; skAgg[s.name].got+=s.got; skAgg[s.name].max+=s.max; }); });
+  var skNames=Object.keys(skAgg);
+  var weakest=null; skNames.forEach(function(n){var p=skAgg[n].max?skAgg[n].got/skAgg[n].max*100:100; if(weakest===null||p<weakest.p)weakest={n:n,p:Math.round(p)};});
+  function pill(p){var c=p>=75?'pg':(p>=50?'po':'pr');return '<span class="pill '+c+'">'+p+'%</span>';}
+  var html='';
+  html+='<div class="card"><h2>📈 ملخّص الصف</h2><div class="grid">'
+    +'<div class="stat"><b>'+R.length+'</b><span>حلّوا</span></div>'
+    +'<div class="stat"><b>'+avg+'%</b><span>المتوسط</span></div>'
+    +'<div class="stat '+(pass===R.length?'':'o')+'"><b>'+pass+'/'+R.length+'</b><span>ناجح</span></div>'
+    +'</div><div class="grid" style="margin-top:8px"><div class="stat"><b>'+hi+'</b><span>أعلى درجة</span></div><div class="stat r"><b>'+lo+'</b><span>أقل درجة</span></div><div class="stat"><b>'+tot+'</b><span>الكلية</span></div></div>'
+    +(weakest?'<div style="margin-top:10px;background:#fdf0e3;border:1px solid #f3d9b8;border-radius:10px;padding:10px;font-size:13px;color:#8a5a1e">🔴 المهارة الأضعف على الصف: <b>'+E(weakest.n)+'</b> ('+weakest.p+'%) — تحتاج إعادة شرح.</div>':'')
+    +'</div>';
+  var rows=R.map(function(r,i){var p=r.total?Math.round(r.earned/r.total*100):0; var weak=r.skills.filter(function(s){return s.max&&s.got/s.max<0.5}).map(function(s){return s.name}); return '<tr><td class="c" style="color:#6b7c8f">'+(i+1)+'</td><td>'+E(r.name)+'</td><td class="c" style="font-weight:800;color:#2a9d8f">'+r.earned+'/'+r.total+'</td><td class="c">'+pill(p)+'</td><td style="font-size:12px;color:#c17a3a">'+(weak.length?E(weak.join("، ")):'—')+'</td></tr>';}).join("");
+  html+='<div class="card"><h2>🖊️ كشف الدرجات</h2><table><tr><th class="c">م</th><th>الاسم</th><th class="c">الدرجة</th><th class="c">النسبة</th><th>مهارات ضعيفة</th></tr>'+rows+'</table></div>';
+  var skr=skNames.map(function(n){var s=skAgg[n];var p=s.max?Math.round(s.got/s.max*100):0;var g=p>=60;return '<div class="skrow"><span>'+(g?'🟢':'🔴')+'</span><span class="n">'+E(n)+'</span><span class="bar"><i style="width:'+p+'%;background:'+(g?'#2a9d8f':'#e05b4a')+'"></i></span><span style="font-weight:800;font-size:13px;color:'+(g?'#2a9d8f':'#e05b4a')+';width:42px;text-align:left">'+p+'%</span></div>';}).join("");
+  html+='<div class="card"><h2>🎯 تحليل مهارات الصف</h2>'+skr+'</div>';
+  var stu=R.map(function(r){var p=r.total?Math.round(r.earned/r.total*100):0;var sk=r.skills.map(function(s){var sp=s.max?Math.round(s.got/s.max*100):0;var g=sp>=60;return '<div style="display:flex;gap:8px;align-items:center;padding:3px 0;font-size:13px"><span>'+(g?'🟢':'🔴')+'</span><span style="flex:1">'+E(s.name)+'</span><span style="font-weight:700;color:'+(g?'#2a9d8f':'#e05b4a')+'">'+s.got+'/'+s.max+'</span></div>';}).join("");return '<div class="stu"><div class="h"><span class="nm">'+E(r.name)+'</span><span style="font-weight:800;color:#2a9d8f">'+r.earned+'/'+r.total+'</span>'+pill(p)+'</div>'+sk+'</div>';}).join("");
+  html+='<div class="card"><h2>👤 تحليل كل طالب</h2>'+stu+'</div>';
+  html+='<div class="card noprint"><button class="btn btn3" onclick="window.print()">🖨️ طباعة / حفظ PDF للتقرير</button><button class="btn btn2" style="margin-top:8px" onclick="location.reload()">🔄 اختبار آخر</button></div>';
+  $('out').innerHTML=html;
+  $('inp').style.display='none';
+}
+if(hid) fetchR();
 </script></body></html>
