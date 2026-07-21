@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#ef7d3b"><title>اختبار — ركن المعلم</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:#eaeef3;color:#16263d;line-height:1.6}
+.w{max-width:560px;margin:0 auto;padding:16px;min-height:100vh}
+.hide{display:none!important}
+.card{background:#fff;border:1px solid #dde4ec;border-radius:18px;box-shadow:0 6px 24px rgba(22,38,61,.08);padding:20px}
+.br{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+.lg{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#ef7d3b,#d5622a);display:flex;align-items:center;justify-content:center;font-size:19px}
+.eb{display:inline-block;font-size:11px;font-weight:800;color:#d5622a;background:#fbe9dd;padding:5px 12px;border-radius:20px;margin-bottom:12px}
+h1{font-size:24px;font-weight:800;margin:0 0 6px}
+.mut{color:#6b7c8f;font-size:13px}
+.row{display:flex;gap:10px;margin:16px 0}
+.chip{flex:1;background:#f3f6fa;border:1px solid #dde4ec;border-radius:12px;padding:10px;text-align:center}
+.chip b{display:block;font-size:18px;color:#d5622a}
+.chip span{font-size:11px;color:#6b7c8f}
+label.fl{font-weight:700;font-size:14px;display:block;margin:14px 0 7px}
+select,input{width:100%;padding:13px;border:1.5px solid #dde4ec;border-radius:12px;background:#f3f6fa;color:#16263d;font-size:16px;font-family:inherit;text-align:right}
+.btn{width:100%;border:none;border-radius:13px;padding:15px;font-weight:800;font-size:16px;font-family:inherit;color:#fff;background:linear-gradient(135deg,#ef7d3b,#d5622a);margin-top:14px}
+.btn:disabled{background:#c3ccd6}
+.btn.g{background:none;color:#6b7c8f;font-weight:700;font-size:14px;box-shadow:none}
+.btn.ok{background:linear-gradient(135deg,#33b1a1,#2a9d8f)}
+.tb{display:flex;align-items:center;gap:10px;padding:6px 2px 12px}
+.sg{flex:1;display:flex;gap:4px}
+.s{flex:1;height:6px;border-radius:6px;background:#d3dbe4}
+.s.d{background:#2a9d8f}.s.c{background:#ef7d3b}
+.qc{font-weight:800;color:#6b7c8f;font-size:13px}
+.qs{display:inline-block;font-size:11px;font-weight:800;color:#d5622a;background:#fbe9dd;padding:4px 11px;border-radius:20px;margin-bottom:10px}
+.qt{font-size:19px;font-weight:700;margin:6px 0 18px}
+.op{display:flex;align-items:center;gap:12px;width:100%;text-align:right;background:#f3f6fa;border:2px solid #dde4ec;border-radius:13px;padding:14px;margin-bottom:10px;font-size:16px;font-weight:600;color:#16263d;font-family:inherit}
+.op .mk{flex:0 0 24px;height:24px;border-radius:50%;border:2px solid #c2ccd7;display:flex;align-items:center;justify-content:center;color:transparent;font-weight:800}
+.op.sel{border-color:#ef7d3b;background:#fdf1e9}.op.sel .mk{background:#ef7d3b;border-color:#ef7d3b;color:#fff}
+.nav{display:flex;gap:10px;margin-top:8px}.nav .btn{flex:1;margin-top:0}
+.nav .bk{flex:0 0 42%;background:#f3f6fa;color:#16263d}
+.pass{background:#f3f6fa;border:1px solid #dde4ec;border-radius:12px;padding:12px;font-size:14px;line-height:1.7;max-height:190px;overflow:auto;margin:2px 0 14px}
+.ch{width:64px;height:64px;border-radius:50%;background:#e7f5f3;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px}
+.sv{font-size:48px;font-weight:800;color:#d5622a;line-height:1;text-align:center}
+.sk{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #dde4ec}
+.sk .nm{flex:1;font-weight:700;font-size:15px}
+.dt{background:#16263d;color:#ffd7a8;text-align:center;font-size:11px;font-weight:700;padding:6px}
+.note{background:#fff8ee;border:1px solid #f5d9b8;border-radius:12px;padding:12px;font-size:13px;color:#8a5a1e;margin-top:16px;line-height:1.7}
+</style></head><body>
+<div class="dt hide" id="dt">🧪 وضع تجريبي — النتيجة لا تُرسل</div>
+<div class="w">
+<div class="br"><div class="lg">📚</div><div><div style="font-weight:800;font-size:15px">ركن المعلم</div><div style="font-size:11px;color:#6b7c8f">اختبار إلكتروني</div></div></div>
+<div id="sW" class="card">
+<div id="wOrg" style="font-weight:800;font-size:14px;color:#6b7c8f;margin-bottom:8px"></div>
+<span class="eb" id="wS">اختبار</span><h1 id="wT">عنوان</h1>
+<div class="mut"><span id="wTL">المعلّم</span>: <b id="wTe" style="color:#16263d">—</b></div>
+<div class="row"><div class="chip"><b id="wQ">0</b><span>سؤال</span></div><div class="chip"><b id="wM">0</b><span>الدرجة</span></div><div class="chip"><b id="wSk">0</b><span>مهارة</span></div></div>
+<label class="fl" id="pl">اختر اسمك من القائمة</label>
+<select id="pk"><option value="">— اختر اسمك —</option></select>
+<button class="btn" id="start" disabled>ابدأ الاختبار ✍️</button>
+</div>
+<div id="sC" class="card hide" style="text-align:center">
+<div class="mut">تأكيد الاسم قبل البدء</div>
+<div class="ch">👋</div><div class="mut">هل أنت</div>
+<div id="cN" style="font-size:26px;font-weight:800;margin:2px 0 12px">—</div>
+<div class="note" style="background:#fff4f2;border-color:#f3c9c2;color:#a5443a;text-align:right">⚠️ بعد التسليم <b>يُقفل هذا الاسم نهائياً</b> ولا يمكن إعادة الاختبار به. تأكّد أنه اسمك.</div>
+<button class="btn" id="cok">نعم، ابدأ</button><button class="btn g" id="cbk">تغيير الاسم</button>
+</div>
+<div id="sQ" class="hide">
+<div class="tb"><div class="sg" id="sg"></div><div class="qc"><b id="qn">1</b>/<span id="qtt">1</span></div></div>
+<div class="card"><span class="qs" id="qsk">مهارة</span><div id="qp" class="pass hide"></div><div class="qt" id="qtx">سؤال</div><div id="qo"></div></div>
+<div class="nav"><button class="btn bk" id="pv">‹ السابق</button><button class="btn" id="nx">التالي ›</button></div>
+</div>
+<div id="sR" class="card hide">
+<div style="text-align:center"><div class="ch">✓</div><div id="rN" style="font-size:20px;font-weight:800">تم التسليم</div><div class="mut">تم استلام إجاباتك</div></div>
+<div class="sv"><span id="rSc">0</span><span style="font-size:22px;color:#6b7c8f">/<span id="rTt">0</span></span></div>
+<div style="font-weight:800;font-size:14px;margin:18px 0 8px;color:#6b7c8f">📊 أداؤك في المهارات</div>
+<div id="rSk"></div>
+<div class="note" id="rNo">🧪 عرض تجريبي — في الحقيقي تُرسل نتيجتك لمعلّمك تلقائياً.</div>
+</div>
+</div>
+<script>
+var FB={apiKey:"AIzaSyCc99_No-Jly01WpO5jKYbIO0WPApJBLpM",authDomain:"rokn-almoalem.firebaseapp.com",projectId:"rokn-almoalem",storageBucket:"rokn-almoalem.firebasestorage.app",messagingSenderId:"878996226756",appId:"1:878996226756:web:c1e25bf15de839fed77f91"};
+var DEMO={org:"مدرسة الأمل المتوسطة",title:"اختبار العلوم — الوحدة الأولى",teacher:"أ. سارة",teacherF:true,cls:"ثاني متوسط",students:["ابرار","خلود","عايشة","عليا","منال","نورة","ريم","دانة"],skills:[{name:"المادة",qtype:"mcq",text:"أيّ ممّا يلي خاصية فيزيائية؟",options:["الاحتراق","اللون","الصدأ"],answer:1,mark:2},{name:"المادة",qtype:"tf",text:"الكثافة خاصية فيزيائية.",answer:true,mark:1},{name:"التغيّرات",qtype:"mcq",text:"أيّ العمليات تغيّر كيميائي؟",options:["ذوبان السكر","تبخّر الماء","صدأ الحديد"],answer:2,mark:2},{name:"التغيّرات",qtype:"tf",text:"احتراق الورق تغيّر فيزيائي.",answer:false,mark:1}]};
+function U(p){if(!p||p.v!==1)return p;var Q=["tf","mcq","passage"];return{id:p.id,org:p.g,title:p.ti,teacher:p.te,teacherF:!!p.tf,subj:p.su,cls:p.c,students:p.s||[],skills:(p.k||[]).map(function(a){var t=Q[a[0]]||"tf";return{qtype:t,text:a[1]||"",options:t==="mcq"?(a[2]||[]):[],answer:t==="tf"?!!a[3]:a[3],mark:a[4]||1,name:a[5]||""}})}}
+var QUIZ,DEMO_MODE=true,FS=null;
+try{var h=location.hash.slice(1);if(h){QUIZ=U(JSON.parse(decodeURIComponent(escape(atob(h.replace(/-/g,'+').replace(/_/g,'/'))))));DEMO_MODE=false;}}catch(e){}
+if(!QUIZ)QUIZ=DEMO;
+if(DEMO_MODE)document.getElementById('dt').classList.remove('hide');
+try{if(typeof firebase!=="undefined"&&QUIZ.id&&!DEMO_MODE){firebase.initializeApp(FB);FS=firebase.firestore();}}catch(e){}
+function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
+function TG(m,f){return QUIZ.teacherF?f:m}
+function $(i){return document.getElementById(i)}
+var FLAT=[],cp=null;
+(QUIZ.skills||[]).forEach(function(sk,si){if(sk.qtype==="passage"){cp=sk.text||"";return;}var t=sk.qtype==="mcq"?"mc":"tf";FLAT.push({skill:(sk.name&&sk.name.trim())||"عام",oi:si,pass:cp,q:{type:t,text:sk.text||"",options:t==="mc"?(sk.options||[]).filter(function(o){return String(o).trim()!==""}):["صح","خطأ"],correct:t==="mc"?(typeof sk.answer==="number"?sk.answer:0):((sk.answer!==false&&sk.answer!==0&&sk.answer!=="false")?0:1),mark:+sk.mark||1}})});
+var TOT=FLAT.reduce(function(a,f){return a+(+f.q.mark||0)},0),SKC=(function(){var o={};FLAT.forEach(function(f){o[f.skill]=1});return Object.keys(o).length})();
+function SH(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+FLAT.forEach(function(f){var q=f.q;if(q.type==="mc"&&q.options.length>1){var o=q.options.map(function(_,i){return i});SH(o);q.options=o.map(function(i){return q.options[i]});q.correct=o.indexOf(q.correct)}});SH(FLAT);
+var ans=new Array(FLAT.length).fill(null),cur=0,sn="";
+$('wOrg').textContent=QUIZ.org?('🏫 '+QUIZ.org):'';if(!QUIZ.org)$('wOrg').style.display='none';
+$('wS').textContent=QUIZ.cls||"اختبار";$('wT').textContent=QUIZ.title||"اختبار";$('wTe').textContent=QUIZ.teacher||"—";
+$('wTL').textContent=QUIZ.teacherF?"المعلّمة":"المعلّم";$('wQ').textContent=FLAT.length;$('wM').textContent=TOT;$('wSk').textContent=SKC;
+$('pl').textContent=TG("اختر اسمك من القائمة","اختاري اسمك من القائمة");$('pk').querySelector('option').textContent=TG("— اختر اسمك —","— اختاري اسمك —");
+$('start').textContent=TG("ابدأ الاختبار ✍️","ابدئي الاختبار ✍️");
+var LK={};try{JSON.parse(localStorage.getItem('lk_'+(QUIZ.title||''))||'[]').forEach(function(n){LK[n]=1})}catch(e){}
+function lock(n){LK[n]=1;try{localStorage.setItem('lk_'+(QUIZ.title||''),JSON.stringify(Object.keys(LK)))}catch(e){}}
+var pk=$('pk');(QUIZ.students||[]).forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n+(LK[n]?'  (تم ✓)':'');if(LK[n])o.disabled=true;pk.appendChild(o)});
+pk.onchange=function(){sn=pk.value;$('start').disabled=!sn};
+FLAT.forEach(function(){var s=document.createElement('div');s.className='s';$('sg').appendChild(s)});$('qtt').textContent=FLAT.length;
+function show(x){['sW','sC','sQ','sR'].forEach(function(i){$(i).classList.toggle('hide',i!==x)});window.scrollTo(0,0)}
+$('start').onclick=function(){if(!sn)return;$('cN').textContent=sn;$('cok').textContent=TG('نعم، أنا ','نعم، أنا ')+sn+TG(' — ابدأ',' — ابدئي');show('sC')};
+$('cbk').onclick=function(){show('sW')};$('cok').onclick=function(){cur=0;rq();show('sQ')};
+function rq(){var f=FLAT[cur],q=f.q;$('qsk').textContent=f.skill;$('qtx').textContent=q.text;$('qn').textContent=cur+1;
+var p=$('qp');if(f.pass){p.textContent='📖 '+f.pass;p.classList.remove('hide')}else p.classList.add('hide');
+var b=$('qo');b.innerHTML='';q.options.forEach(function(op,oi){var e=document.createElement('button');e.className='op'+(ans[cur]===oi?' sel':'');e.innerHTML='<span class="mk">✓</span><span>'+E(op)+'</span>';e.onclick=function(){ans[cur]=oi;rq()};b.appendChild(e)});
+var sg=$('sg').children;for(var i=0;i<sg.length;i++)sg[i].className='s'+(ans[i]!=null?' d':'')+(i===cur?' c':'');
+$('pv').style.visibility=cur===0?'hidden':'visible';var n=$('nx');n.textContent=cur===FLAT.length-1?'تسليم ✓':'التالي ›';n.className='btn'+(cur===FLAT.length-1?' ok':'')}
+$('pv').onclick=function(){if(cur>0){cur--;rq()}};
+$('nx').onclick=function(){if(cur<FLAT.length-1){cur++;rq()}else sub()};
+function sub(){var u=ans.filter(function(a){return a==null}).length;if(u>0&&!confirm('لديك '+u+' سؤال غير مُجاب. تسليم؟'))return;
+var earned=0,bs={},gr={};FLAT.forEach(function(f,i){var mk=+f.q.mark||0,got=ans[i]===f.q.correct?mk:0;earned+=got;if(!bs[f.skill])bs[f.skill]={got:0,max:0};bs[f.skill].got+=got;bs[f.skill].max+=mk;if(f.oi!=null)gr[String(f.oi)]=got});
+var pay={name:sn,earned:earned,total:TOT,skills:Object.keys(bs).map(function(n){return{name:n,got:bs[n].got,max:bs[n].max}}),grades:gr,at:new Date().toISOString()};
+function done(){lock(sn);res(pay,bs);show('sR')}
+function blk(e){if(e)console.warn(e);alert("تم تسليم هذا الاسم مسبقاً — لا يمكن الإعادة.")}
+if(FS&&QUIZ.id&&!DEMO_MODE){var id=String(sn).replace(/[\/.#$\[\]]/g,"_"),rf=FS.collection("exams").doc(QUIZ.id).collection("results").doc(id);
+rf.get().then(function(s){if(s&&s.exists){blk();return}rf.set(pay).then(done).catch(blk)}).catch(function(){rf.set(pay).then(done).catch(blk)})}else done()}
+function res(p,bs){$('rN').textContent='تم تسليم اختبار '+p.name+' ✓';$('rSc').textContent=p.earned;$('rTt').textContent=p.total;
+var b=$('rSk');b.innerHTML='';Object.keys(bs).forEach(function(n){var s=bs[n],pc=s.max?Math.round(s.got/s.max*100):0,g=pc>=60;b.innerHTML+='<div class="sk"><span>'+(g?'🟢':'🔴')+'</span><span class="nm">'+E(n)+'</span><span style="font-weight:800;color:'+(g?'#2a9d8f':'#e05b4a')+'">'+s.got+'/'+s.max+'</span></div>'})}
+function LL(){if(!FS||!QUIZ.id||DEMO_MODE)return;FS.collection("exams").doc(QUIZ.id).collection("results").get().then(function(sn){sn.forEach(function(d){var nm=(d.data()&&d.data().name)||d.id;LK[nm]=1});var os=pk.querySelectorAll('option');for(var i=0;i<os.length;i++){if(os[i].value&&LK[os[i].value]){os[i].disabled=true;if(os[i].textContent.indexOf("(تم")<0)os[i].textContent=os[i].value+'  (تم ✓)'}}}).catch(function(){})}
+LL();rq();
+</script></body></html>
