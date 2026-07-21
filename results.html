@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#3d8268"><title>نتائج الاختبار — ركن المعلم</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:#eaeef3;color:#16263d;line-height:1.6}
+.w{max-width:560px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid #dde4ec;border-radius:16px;box-shadow:0 6px 24px rgba(22,38,61,.08);padding:18px;margin-bottom:12px}
+h1{font-size:20px;font-weight:800;margin:0 0 4px}
+.mut{color:#6b7c8f;font-size:13px}
+input{width:100%;padding:12px;border:1.5px solid #dde4ec;border-radius:10px;font-size:16px;font-family:inherit;text-align:center;margin:10px 0}
+.btn{width:100%;border:none;border-radius:11px;padding:14px;font-weight:800;font-size:15px;font-family:inherit;color:#fff;background:linear-gradient(135deg,#3d8268,#2a9d8f);cursor:pointer}
+.btn2{background:#16263d}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.chip{flex:1;background:#f3f6fa;border:1px solid #dde4ec;border-radius:10px;padding:9px;text-align:center}
+.chip b{display:block;font-size:19px}
+.chip .g{color:#2a9d8f}.chip .o{color:#c17a3a}
+.st{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #eef2f6}
+.st .n{flex:1;font-weight:700}
+.code{background:#0f1b2d;color:#7fd6c2;border-radius:10px;padding:12px;font-size:11px;word-break:break-all;max-height:90px;overflow:auto;margin-top:8px;font-family:monospace}
+.err{color:#c0392b;text-align:center;padding:12px}
+.br{display:flex;align-items:center;gap:10px;padding:4px 2px 12px}
+.lg{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#3d8268,#2a9d8f);display:flex;align-items:center;justify-content:center;font-size:18px}
+</style></head><body>
+<div class="w">
+<div class="br"><div class="lg">📊</div><div><div style="font-weight:800;font-size:15px">ركن المعلم</div><div style="font-size:11px;color:#6b7c8f">نتائج الاختبار الإلكتروني</div></div></div>
+
+<div class="card">
+<h1>📊 جلب نتائج اختبار</h1>
+<div class="mut">أدخل رقم الاختبار (من تطبيقك) لجلب نتائج الطلاب.</div>
+<input id="eid" placeholder="رقم الاختبار (مثال: q1a2b3...)">
+<button class="btn" id="go">🔄 جلب النتائج</button>
+</div>
+
+<div id="out"></div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script>
+var FB={apiKey:"AIzaSyCc99_No-Jly01WpO5jKYbIO0WPApJBLpM",projectId:"rokn-almoalem"};
+function $(i){return document.getElementById(i)}
+function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
+function _n(v){if(!v)return 0;return parseFloat(v.integerValue||v.doubleValue||0)||0}
+function _m(v){var o={};if(v&&v.mapValue&&v.mapValue.fields){var F=v.mapValue.fields;Object.keys(F).forEach(function(k){o[k]=_n(F[k])})}return o}
+var _CODE="";
+// رقم الاختبار من الرابط (#) إن وُجد
+var hid=location.hash.slice(1); if(hid) $('eid').value=decodeURIComponent(hid);
+$('go').onclick=function(){
+  var id=($('eid').value||"").trim(); if(!id){ $('out').innerHTML='<div class="card err">اكتب رقم الاختبار أولاً</div>'; return; }
+  $('out').innerHTML='<div class="card mut" style="text-align:center">⏳ جاري الجلب…</div>';
+  var url="https://firestore.googleapis.com/v1/projects/"+FB.projectId+"/databases/(default)/documents/exams/"+encodeURIComponent(id)+"/results?key="+FB.apiKey+"&pageSize=300";
+  fetch(url).then(function(r){return r.json()}).then(function(j){
+    if(j&&j.error){ throw new Error(j.error.message||"خطأ"); }
+    var docs=j.documents||[]; var results=[];
+    docs.forEach(function(d){ var f=d.fields||{}; results.push({ name:(f.name&&f.name.stringValue)||(d.name.split("/").pop()), earned:_n(f.earned), total:_n(f.total), grades:_m(f.grades) }); });
+    render(results);
+  }).catch(function(e){ $('out').innerHTML='<div class="card err">تعذّر الجلب: '+E(String(e&&e.message||e))+'<br><span style="font-size:11px;color:#6b7c8f">تأكد من رقم الاختبار والإنترنت</span></div>'; });
+};
+function render(results){
+  if(!results.length){ $('out').innerHTML='<div class="card" style="text-align:center;color:#6b7c8f">لا نتائج بعد — لم يسلّم أحد.</div>'; return; }
+  results.sort(function(a,b){return String(a.name).localeCompare(String(b.name),"ar")});
+  var rows=results.map(function(r){ var pc=r.total?Math.round(r.earned/r.total*100):0; return '<div class="st"><span class="n">'+E(r.name)+'</span><span style="font-weight:800;color:#2a9d8f">'+r.earned+'/'+r.total+'</span><span style="color:#6b7c8f;font-size:12px;width:40px;text-align:left">'+pc+'%</span></div>'; }).join("");
+  // رمز الاستيراد: [[name,{oi:got}],...]
+  var packed=results.map(function(r){return [r.name, r.grades]});
+  try{ _CODE=btoa(unescape(encodeURIComponent(JSON.stringify(packed)))).replace(/\+/g,'-').replace(/\//g,'_'); }catch(e){ _CODE=""; }
+  $('out').innerHTML=
+    '<div class="card"><div class="row"><div class="chip"><b class="g">'+results.length+'</b><span class="mut">حلّوا</span></div></div>'+rows+'</div>'
+    +'<div class="card"><div style="font-weight:800;font-size:14px;margin-bottom:4px">📥 رمز الاستيراد للتطبيق</div><div class="mut">انسخ الرمز، وافتح تطبيقك ← تبويب «أونلاين» ← «استيراد بالرمز» ← الصقه.</div>'
+    +'<div class="code" id="cd">'+E(_CODE)+'</div>'
+    +'<button class="btn btn2" style="margin-top:10px" onclick="cp()">📋 نسخ الرمز</button></div>';
+}
+function cp(){ try{ navigator.clipboard.writeText(_CODE); alert("تم نسخ الرمز ✓"); }catch(e){ alert("انسخه يدوياً من الصندوق"); } }
+if(hid) $('go').click();
+</script></body></html>
