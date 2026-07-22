@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#3d8268"><title>حفظ الاختبار — ركن المعلم</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:#eef1f5;color:#16263d;line-height:1.6;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:18px}
+.card{background:#fff;border:1px solid #dde4ec;border-radius:16px;box-shadow:0 4px 18px rgba(22,38,61,.08);padding:26px;max-width:440px;width:100%;text-align:center}
+.emoji{font-size:44px;margin-bottom:8px}
+h1{font-size:20px;font-weight:800;margin:0 0 6px}
+p{color:#6b7c8f;font-size:14px;margin:6px 0}
+.spin{width:36px;height:36px;border:4px solid #e2e8f0;border-top-color:#2a9d8f;border-radius:50%;animation:sp .8s linear infinite;margin:10px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.box{background:#f3f6fa;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;color:#6b7c8f;word-break:break-all;margin-top:12px;text-align:right}
+.btn{display:inline-block;margin-top:14px;background:linear-gradient(135deg,#3d8268,#2a9d8f);color:#fff;font-weight:800;border:none;border-radius:11px;padding:12px 20px;font-size:14px;font-family:inherit;cursor:pointer;text-decoration:none}
+.err{color:#c0392b}
+.ok{color:#1e6b58}
+</style></head><body>
+<div class="card" id="app">
+  <div class="spin"></div>
+  <h1>جاري حفظ الاختبار…</h1>
+  <p>لحظات من فضلك</p>
+</div>
+<script>
+var KEY="AIzaSyCc99_No-Jly01WpO5jKYbIO0WPApJBLpM";
+var PROJECT="rokn-almoalem";
+var BASE="https://firestore.googleapis.com/v1/projects/"+PROJECT+"/databases/(default)/documents";
+var QUIZ="https://rokn-almoalem.github.io/quiz/index.html";
+function $(i){return document.getElementById(i);}
+function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+
+/* يستقبل: #<base64 للـ pack>  →  يحفظ في exams/{id}  →  يعرض الرابط القصير */
+function decodeHash(){
+  var h=location.hash.slice(1);
+  if(!h) return null;
+  try{
+    var b64=h.replace(/-/g,'+').replace(/_/g,'/'); while(b64.length%4)b64+='=';
+    return JSON.parse(decodeURIComponent(escape(atob(b64))));
+  }catch(e){ return null; }
+}
+var PACK=decodeHash();
+if(!PACK || !PACK.id){
+  $('app').innerHTML='<div class="emoji">⚠️</div><h1 class="err">لا يوجد اختبار</h1><p>افتح هذه الصفحة من زر المشاركة في التطبيق فقط.</p>';
+} else {
+  var id=PACK.id;
+  var url=BASE+'/exams/'+encodeURIComponent(id)+'?key='+KEY;
+  fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({fields:{payload:{stringValue:JSON.stringify(PACK)}}})})
+    .then(function(r){ if(r.ok) return true; return r.json().then(function(j){ throw new Error((j&&j.error&&j.error.message)||('HTTP '+r.status)); }); })
+    .then(function(){
+      var short=QUIZ+'?e='+encodeURIComponent(id);
+      var hdr="📝 اختبار إلكتروني\n"+(PACK.g?("🏫 "+PACK.g+"\n"):"")+"📚 "+(PACK.ti||"اختبار")+"\n"+(PACK.su?("📖 المادة: "+PACK.su+"\n"):"")+(PACK.te?("👤 "+PACK.te+"\n"):"");
+      var msg=hdr+"━━━━━━━━━━\nرابط الحل 👇\n"+short;
+      var wa="https://wa.me/?text="+encodeURIComponent(msg);
+      $('app').innerHTML='<div class="emoji">✅</div><h1 class="ok">تم حفظ الاختبار</h1>'
+        +'<p>هذا هو الرابط القصير — أرسله '+((PACK.tf===1)?'للطالبات':'للطلاب')+':</p>'
+        +'<div class="box" id="u">'+E(short)+'</div>'
+        +'<button class="btn" style="display:block;margin-top:12px" onclick="shareAll()">📤 مشاركة (كل التطبيقات)</button>'
+        +'<a class="btn" style="background:#25D366;display:block;margin-top:8px" href="'+wa+'" target="_blank">📱 واتساب مباشرة</a>'
+        +'<button class="btn" style="background:#16263d;display:block;margin-top:8px" onclick="cp()">📋 نسخ الرابط</button>'
+        +'<p style="font-size:12px;margin-top:14px">✅ '+((PACK.tf===1)?'الطالبة تقدر تضغطه':'الطالب يقدر يضغطه')+' مباشرة من أي مكان — بدون نسخ.</p>';
+      window._short=short; window._msg=msg;
+    })
+    .catch(function(e){
+      $('app').innerHTML='<div class="emoji">⚠️</div><h1 class="err">تعذّر حفظ الاختبار</h1>'
+        +'<p>تأكد من اتصال الإنترنت ثم أعد المحاولة.<br><span style="font-size:11px;opacity:.7">('+E(String(e&&e.message||e))+')</span></p>';
+    });
+}
+function shareAll(){
+  var msg=window._msg||window._short||'';
+  if(navigator.share){
+    navigator.share({title:'اختبار إلكتروني — ركن المعلم', text:msg}).catch(function(){});
+  } else {
+    cp();
+    alert('متصفّحك لا يدعم المشاركة المباشرة — نُسخ الرابط، الصقه في التطبيق الذي تريد.');
+  }
+}
+function cp(){
+  var t=window._short||''; 
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){alert('نُسخ الرابط ✓');}).catch(sel); }
+  else sel();
+  function sel(){ var r=document.createRange(); r.selectNode($('u')); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); try{document.execCommand('copy');alert('نُسخ الرابط ✓');}catch(e){alert('حدّد الرابط وانسخه يدوياً');} }
+}
+</script></body></html>
