@@ -84,7 +84,7 @@ function $(id){return document.getElementById(id);}
 function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
 function app(html){$('app').innerHTML=html;window.scrollTo(0,0);}
 
-/* ===== فكّ الاختبار من الرابط (#) ===== */
+/* ===== فكّ الاختبار من الرابط (#) — للروابط القديمة ===== */
 function decodeExam(){
   var h=location.hash.slice(1);
   if(!h) return null;
@@ -96,25 +96,25 @@ function decodeExam(){
   }catch(e){ return null; }
 }
 
-var EX=decodeExam();
-var ID=EX&&EX.id;
-var Q=(EX&&EX.k)||[];            // الأسئلة: [type, text, options, answer, mark, skill]
-var isF=EX&&EX.tf===1;           // صيغة التذكير/التأنيث
-var DL=(EX&&EX.dl)||0;           // وقت انتهاء الاختبار (توقيت مطلق، 0 = بلا وقت)
-var STU=isF?"الطالبة":"الطالب";
-var TCHR=isF?"المعلّمة":"المعلّم";
-
-var GRADABLE=Q.filter(function(q){return q[0]===0||q[0]===1;});
-var TOTAL=GRADABLE.reduce(function(a,q){return a+(Number(q[4])||1);},0);
-var SKILLS=(function(){var o={};GRADABLE.forEach(function(q){var n=(q[5]||'').trim()||'عام';o[n]=1;});return Object.keys(o);})();
-
+var EX=null, ID=null, Q=[], isF=false, DL=0, STU="الطالب", TCHR="المعلّم", GRADABLE=[], TOTAL=0, SKILLS=[];
 var state={name:'',answers:{},i:0};
+function boot(exObj){
+  EX=exObj; ID=EX&&EX.id; Q=(EX&&EX.k)||[]; isF=EX&&EX.tf===1; DL=(EX&&EX.dl)||0;
+  STU=isF?"الطالبة":"الطالب"; TCHR=isF?"المعلّمة":"المعلّم";
+  GRADABLE=Q.filter(function(q){return q[0]===0||q[0]===1;});
+  TOTAL=GRADABLE.reduce(function(a,q){return a+(Number(q[4])||1);},0);
+  SKILLS=(function(){var o={};GRADABLE.forEach(function(q){var n=(q[5]||'').trim()||'عام';o[n]=1;});return Object.keys(o);})();
+  if(!EX||!ID||!Q.length){ screenNoExam(); }
+  else if(DL && Date.now()>DL){ screenExpired(); }
+  else{ screenIntro(); }
+}
+function getParam(n){ var m=new RegExp('[?&]'+n+'=([^&#]+)').exec(location.search); return m?decodeURIComponent(m[1]):''; }
 
 /* ===== الشاشات ===== */
 function screenNoExam(){
   app('<div class="card center"><div class="emoji">🔗</div>'
     +'<h1>لا يوجد اختبار</h1>'
-    +'<p class="meta">افتح الرابط الذي أرسله لك '+TCHR+' كاملاً. انسخ الرابط كله والصقه في شريط المتصفّح — لا تضغط عليه مباشرة، فقد يُقطع الجزء المهم بعد علامة <b>#</b>.</p>'
+    +'<p class="meta">افتح الرابط الذي أرسله لك '+TCHR+'.</p>'
     +'</div>');
 }
 
@@ -258,7 +258,6 @@ function doSubmit(){
     screenDone(res,false,String(err&&err.message||err));
   });
 }
-/* ===== المؤقّت ===== */
 function fmt(ms){ if(ms<0)ms=0; var s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60); s=s%60; m=m%60; return (h>0?(h+':'):'')+((h>0&&m<10)?'0':'')+m+':'+(s<10?'0':'')+s; }
 function startTimer(){
   if(!DL) return;
@@ -373,10 +372,22 @@ function screenDone(res,ok,errMsg){
   };
 }
 
-/* ===== تشغيل ===== */
-if(!EX||!ID||!Q.length){ screenNoExam(); }
-else if(DL && Date.now()>DL){ screenExpired(); }
-else{ screenIntro(); }
+/* ===== تشغيل: رابط قصير (?e=) من القاعدة، أو رابط قديم (#) ===== */
+var _eid=getParam('e');
+if(_eid){
+  app('<div class="card center"><div class="spin"></div><h1>جاري تحميل الاختبار…</h1><p class="meta">لحظات من فضلك</p></div>');
+  fetch(BASE+'/exams/'+encodeURIComponent(_eid)+'?key='+KEY).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.error) throw new Error(j.error.message||'خطأ');
+    var pl=j.fields&&j.fields.payload&&j.fields.payload.stringValue;
+    if(!pl) throw new Error('الاختبار غير موجود');
+    boot(JSON.parse(pl));
+  }).catch(function(e){
+    app('<div class="card center"><div class="emoji">⚠️</div><h1>تعذّر تحميل الاختبار</h1><p class="meta">تأكد من اتصال الإنترنت ثم أعد فتح الرابط.<br><span style="font-size:11px;opacity:.7">('+E(String(e&&e.message||e))+')</span></p></div>');
+  });
+} else {
+  var _ex=decodeExam();
+  if(_ex) boot(_ex); else screenNoExam();
+}
 </script>
 </body>
 </html>
