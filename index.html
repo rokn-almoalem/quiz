@@ -100,6 +100,7 @@ var EX=decodeExam();
 var ID=EX&&EX.id;
 var Q=(EX&&EX.k)||[];            // الأسئلة: [type, text, options, answer, mark, skill]
 var isF=EX&&EX.tf===1;           // صيغة التذكير/التأنيث
+var DL=(EX&&EX.dl)||0;           // وقت انتهاء الاختبار (توقيت مطلق، 0 = بلا وقت)
 var STU=isF?"الطالبة":"الطالب";
 var TCHR=isF?"المعلّمة":"المعلّم";
 
@@ -135,6 +136,7 @@ function screenIntro(){
     +'<label for="who">اختر اسمك من القائمة</label>'
     +'<select id="who">'+opts+'</select>'
     +'<button class="btn" id="start">ابدأ الاختبار ✍️</button>'
+    +(DL?('<div class="note ok">⏰ ينتهي الاختبار: <b>'+new Date(DL).toLocaleString('ar')+'</b></div>'):'')
     +'<div class="note warn">⚠️ بعد التسليم يُقفل اسمك نهائياً ولا يمكن إعادة الحل. تأكّد أنه اسمك.</div>'
     +'</div>');
   $('start').onclick=function(){
@@ -153,6 +155,7 @@ function toastInline(msg){
 }
 
 function checkNameThenConfirm(){
+  if(DL && Date.now()>DL){ screenExpired(); return; }
   var b=$('start'); b.disabled=true; b.textContent='جاري التحقق…';
   nameTaken(state.name).then(function(taken){
     if(taken){ screenLocked(); return; }
@@ -175,7 +178,7 @@ function screenConfirm(){
     +'<button class="btn" id="go">نعم، ابدأ</button>'
     +'<button class="btn ghost" onclick="location.reload()">تغيير الاسم</button>'
     +'</div>');
-  $('go').onclick=function(){ state.i=0; renderQ(); };
+  $('go').onclick=function(){ state.i=0; renderQ(); startTimer(); };
 }
 
 function renderQ(){
@@ -232,11 +235,21 @@ function humanNumber(idx){
   return n;
 }
 
+var _submitted=false, _timerInt=null;
 function trySubmit(){
   var unanswered=GRADABLE.filter(function(g){var idx=Q.indexOf(g);return state.answers[idx]==null;}).length;
   if(unanswered>0){
     if(!confirm('لديك '+unanswered+' سؤال بدون إجابة (تُحتسب خطأ). هل تريد التسليم؟')) return;
   }
+  doSubmit();
+}
+function autoSubmit(){
+  if(_submitted) return;
+  alert('انتهى وقت الاختبار — سيتم تسليم إجاباتك الآن.');
+  doSubmit();
+}
+function doSubmit(){
+  if(_submitted) return; _submitted=true; stopTimer();
   var res=grade();
   screenSending();
   sendResult(res).then(function(){
@@ -244,6 +257,32 @@ function trySubmit(){
   }).catch(function(err){
     screenDone(res,false,String(err&&err.message||err));
   });
+}
+/* ===== المؤقّت ===== */
+function fmt(ms){ if(ms<0)ms=0; var s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60); s=s%60; m=m%60; return (h>0?(h+':'):'')+((h>0&&m<10)?'0':'')+m+':'+(s<10?'0':'')+s; }
+function startTimer(){
+  if(!DL) return;
+  var bar=document.getElementById('qzTimer');
+  if(!bar){ bar=document.createElement('div'); bar.id='qzTimer';
+    bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;text-align:center;font-family:inherit;font-weight:800;font-size:14px;padding:8px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18)';
+    document.body.appendChild(bar);
+    var w=document.querySelector('.w'); if(w) w.style.paddingTop='46px';
+  }
+  function tick(){
+    var rem=DL-Date.now();
+    if(rem<=0){ stopTimer(); autoSubmit(); return; }
+    var warn=rem<=5*60*1000;
+    bar.style.background=warn?'#e05b4a':'#2a9d8f';
+    bar.textContent=(warn?'⚠️ باقٍ ':'⏱️ متبقّي ')+fmt(rem)+(warn?' — سيُسلَّم تلقائياً':'');
+  }
+  tick(); _timerInt=setInterval(tick,1000);
+}
+function stopTimer(){ if(_timerInt){clearInterval(_timerInt);_timerInt=null;} var b=document.getElementById('qzTimer'); if(b)b.remove(); var w=document.querySelector('.w'); if(w) w.style.paddingTop=''; }
+function screenExpired(){
+  app('<div class="card center"><div class="emoji">⏰</div>'
+    +'<h1>انتهى وقت الاختبار</h1>'
+    +'<p class="meta">أُقفل هذا الاختبار ولم يعد بالإمكان حلّه. للاستفسار راجع '+TCHR+'.</p>'
+    +'</div>');
 }
 
 /* ===== التصحيح ===== */
@@ -336,6 +375,7 @@ function screenDone(res,ok,errMsg){
 
 /* ===== تشغيل ===== */
 if(!EX||!ID||!Q.length){ screenNoExam(); }
+else if(DL && Date.now()>DL){ screenExpired(); }
 else{ screenIntro(); }
 </script>
 </body>
