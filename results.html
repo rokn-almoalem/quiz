@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#3d8268"><title>نتائج الاختبار — ركن المعلم</title>
+<meta name="theme-color" content="#ef7d3b"><title>نتائج الاختبار — ركن المعلم</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:#eef1f5;color:#16263d;line-height:1.55}
@@ -14,7 +14,7 @@ input{width:100%;padding:12px;border:1.5px solid #dde4ec;border-radius:10px;font
 .btn2{background:#16263d}.btn3{background:#ef7d3b;color:#1a1200}
 .err{color:#c0392b;text-align:center;padding:12px}
 .br{display:flex;align-items:center;gap:10px;padding:4px 2px 12px}
-.lg{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#3d8268,#2a9d8f);display:flex;align-items:center;justify-content:center;font-size:18px}
+.lg{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%,#f5a463,#ef7d3b);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(239,123,59,.35)}
 
 /* ==== ورقة التقرير ==== */
 .sheet{background:#fff;border:1px solid #dde4ec;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 4px 18px rgba(22,38,61,.06)}
@@ -69,7 +69,7 @@ tbody tr:nth-child(even){background:#fafcfe}
 }
 </style></head><body>
 <div class="w">
-<div class="br noprint"><div class="lg">📊</div><div><div style="font-weight:800;font-size:15px">ركن المعلم</div><div style="font-size:11px;color:#6b7c8f">نتائج وتحليل الاختبار</div></div></div>
+<div class="br noprint"><div class="lg">📚</div><div><div style="font-weight:800;font-size:15px">ركن المعلم</div><div style="font-size:11px;color:#6b7c8f">نتائج وتحليل الاختبار</div></div></div>
 
 <div class="card noprint" id="inp">
 <h1>📊 نتائج الاختبار الإلكتروني</h1>
@@ -87,7 +87,19 @@ function $(i){return document.getElementById(i)}
 function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
 function _n(v){if(!v)return 0;return parseFloat(v.integerValue||v.doubleValue||0)||0}
 function _s(v){return (v&&v.stringValue)||""}
-function _arr(v){var a=[];if(v&&v.arrayValue&&v.arrayValue.values){v.arrayValue.values.forEach(function(x){if(x.mapValue&&x.mapValue.fields){var F=x.mapValue.fields;a.push({name:_s(F.name),got:_n(F.got),max:_n(F.max)})}})}return a}
+/* v2: النتائج تصل بأرقام — والأسماء تُفكّ من الرابط (لا تمرّ بالخادم إطلاقاً) */
+function _nameOf(i){ var a=(META&&META.sn)||[]; return (a[i]!=null&&a[i]!=="")?a[i]:('طالب #'+(Number(i)+1)); }
+function _skillOf(i){ var a=(META&&META.sk)||[]; return (a[i]!=null&&a[i]!=="")?a[i]:('مهارة '+(Number(i)+1)); }
+function _resolveName(d,f){
+  if(f.name) return _s(f.name);                       // نتيجة قديمة بالاسم
+  if(f.i!=null) return _nameOf(_n(f.i));              // نتيجة جديدة بالرقم
+  var id=String(d.name||"").split("/").pop();
+  var m=/^s(\d+)$/.exec(id);
+  return m?_nameOf(Number(m[1])):id;
+}
+function _arr(v){var a=[];if(v&&v.arrayValue&&v.arrayValue.values){v.arrayValue.values.forEach(function(x){if(x.mapValue&&x.mapValue.fields){var F=x.mapValue.fields;
+  var nm=F.name?_s(F.name):(F.i!=null?_skillOf(_n(F.i)):"مهارة");
+  a.push({name:nm,got:_n(F.got),max:_n(F.max)})}})}return a}
 
 /* فكّ الرابط: إمّا بيانات كاملة (JSON) أو رقم اختبار خام */
 function decodeHash(){
@@ -120,7 +132,7 @@ function fetchR(id){
   var url="https://firestore.googleapis.com/v1/projects/"+FB.projectId+"/databases/(default)/documents/exams/"+encodeURIComponent(id)+"/results?key="+FB.apiKey+"&pageSize=300";
   fetch(url).then(function(r){return r.json()}).then(function(j){
     if(j&&j.error) throw new Error(j.error.message||"خطأ");
-    var R=(j.documents||[]).map(function(d){var f=d.fields||{};return{name:_s(f.name)||d.name.split("/").pop(),earned:_n(f.earned),total:_n(f.total),skills:_arr(f.skills)}});
+    var R=(j.documents||[]).map(function(d){var f=d.fields||{};return{name:_resolveName(d,f),earned:_n(f.earned),total:_n(f.total),skills:_arr(f.skills)}});
     render(R);
   }).catch(function(e){ $('out').innerHTML='<div class="card err">تعذّر الجلب: '+E(String(e&&e.message||e))+'<br><span style="font-size:11px;color:#6b7c8f">تأكد من رقم الاختبار والإنترنت</span></div>'; });
 }
