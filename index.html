@@ -15,7 +15,7 @@ html,body{margin:0}
 body{font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
 .w{max-width:600px;margin:0 auto;padding:16px}
 .br{display:flex;align-items:center;gap:10px;padding:2px 2px 12px}
-.lg{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--green2));display:flex;align-items:center;justify-content:center;font-size:19px}
+.lg{width:38px;height:38px;border-radius:11px;background:radial-gradient(circle at 30% 30%,#f5a463,#ef7d3b);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 3px 11px rgba(239,123,59,.35)}
 .br .t1{font-weight:800;font-size:15px}.br .t2{font-size:11px;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 4px 18px rgba(22,38,61,.06);padding:18px;margin-bottom:14px}
 h1{font-size:21px;font-weight:800;margin:0 0 6px}
@@ -69,7 +69,7 @@ select,input{width:100%;padding:12px;border:1.5px solid var(--line);border-radiu
 </head>
 <body>
 <div class="w">
-  <div class="br"><div class="lg">📝</div><div><div class="t1">ركن المعلم</div><div class="t2">اختبار إلكتروني</div></div></div>
+  <div class="br"><div class="lg">📚</div><div><div class="t1">ركن المعلم</div><div class="t2">اختبار إلكتروني</div></div></div>
   <div id="app"></div>
 </div>
 
@@ -96,8 +96,37 @@ function decodeExam(){
   }catch(e){ return null; }
 }
 
+/* ===== v2: الاختبار المشفّر — المفتاح يأتي في #k= ولا يصل الخادم أبداً ===== */
+var V2=false;
+function _hashParam(n){ var m=new RegExp('[#&]'+n+'=([^&]+)').exec(location.hash); return m?decodeURIComponent(m[1]):''; }
+function _b64uBytes(s){
+  s=String(s).replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='=';
+  var bin=atob(s), a=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i);
+  return a;
+}
+function _decryptPack(o){
+  var kRaw=_hashParam('k');
+  if(!kRaw) return Promise.reject(new Error('الرابط ناقص — انسخه كاملاً كما أُرسل'));
+  if(!(window.crypto&&window.crypto.subtle)) return Promise.reject(new Error('المتصفّح لا يدعم فتح هذا الاختبار'));
+  var kb,ivb,ctb;
+  try{ kb=_b64uBytes(kRaw); ivb=_b64uBytes(o.iv); ctb=_b64uBytes(o.ct); }
+  catch(e){ return Promise.reject(new Error('الرابط غير صحيح — تأكد أنك نسخته كاملاً كما أُرسل')); }
+  return crypto.subtle.importKey('raw',kb,{name:'AES-GCM'},false,['decrypt'])
+    .then(function(k){ return crypto.subtle.decrypt({name:'AES-GCM',iv:ivb},k,ctb); })
+    .then(function(buf){ return JSON.parse(new TextDecoder().decode(buf)); })
+    .catch(function(){ throw new Error('تعذّر فتح الاختبار — الرابط غير مكتمل أو غير صحيح'); });
+}
+/* يقبل الصيغتين: {v:2,iv,ct} مشفّرة — أو الحزمة القديمة المكشوفة */
+function openPayload(pl){
+  var o;
+  try{ o=JSON.parse(pl); }catch(e){ return Promise.reject(new Error('بيانات الاختبار تالفة')); }
+  if(o && o.v===2 && o.ct && o.iv){ return _decryptPack(o).then(function(p){ V2=true; return p; }); }
+  V2=false; return Promise.resolve(o);
+}
+
 var EX=null, ID=null, Q=[], isF=false, DL=0, STU="الطالب", TCHR="المعلّم", GRADABLE=[], TOTAL=0, SKILLS=[];
-var state={name:'',answers:{},i:0};
+var state={name:'',idx:-1,answers:{},i:0};
 function boot(exObj){
   EX=exObj; ID=EX&&EX.id; Q=(EX&&EX.k)||[]; isF=EX&&EX.tf===1; DL=(EX&&EX.dl)||0;
   STU=isF?"الطالبة":"الطالب"; TCHR=isF?"المعلّمة":"المعلّم";
@@ -143,6 +172,9 @@ function screenIntro(){
     var v=$('who').value;
     if(!v){ toastInline('اختر اسمك أولاً'); return; }
     state.name=v;
+    state.idx=((EX.s)||[]).indexOf(v);   // رقمه في كشف الجولة — هو ما يُرسل بدل الاسم
+    /* في الوضع المشفّر لا نسمح إطلاقاً بإرسال الاسم الصريح لو تعذّر إيجاد الرقم */
+    if(V2 && state.idx<0){ toastInline('تعذّر التعرّف على اسمك — أعد فتح الرابط كاملاً'); return; }
     checkNameThenConfirm();
   };
 }
@@ -157,7 +189,7 @@ function toastInline(msg){
 function checkNameThenConfirm(){
   if(DL && Date.now()>DL){ screenExpired(); return; }
   var b=$('start'); b.disabled=true; b.textContent='جاري التحقق…';
-  nameTaken(state.name).then(function(taken){
+  nameTaken(myDocKey()).then(function(taken){
     if(taken){ screenLocked(); return; }
     screenConfirm();
   }).catch(function(){ screenConfirm(); });
@@ -304,23 +336,30 @@ function grade(){
 /* ===== القاعدة: تحقق من الاسم + رفع النتيجة ===== */
 function numF(n){ return {doubleValue:Number(n)||0}; }
 function toFields(p){
-  return { fields:{
-    name:{stringValue:String(p.name)},
+  var f={
     earned:numF(p.earned),
     total:numF(p.total),
-    skills:{arrayValue:{values:(p.skills||[]).map(function(s){
-      return {mapValue:{fields:{
-        name:{stringValue:String(s.name)},
-        got:numF(s.got),
-        max:numF(s.max)
-      }}};
-    })}},
     ts:{timestampValue:new Date().toISOString()}
-  }};
+  };
+  if(V2 && state.idx>=0){
+    /* v2: أرقام فقط — لا اسم طالب ولا اسم مهارة يصل الخادم */
+    f.i=numF(state.idx);
+    f.skills={arrayValue:{values:(p.skills||[]).map(function(s){
+      return {mapValue:{fields:{ i:numF(SKILLS.indexOf(s.name)), got:numF(s.got), max:numF(s.max) }}};
+    })}};
+  } else {
+    f.name={stringValue:String(p.name)};
+    f.skills={arrayValue:{values:(p.skills||[]).map(function(s){
+      return {mapValue:{fields:{ name:{stringValue:String(s.name)}, got:numF(s.got), max:numF(s.max) }}};
+    })}};
+  }
+  return { fields:f };
 }
-function docUrl(name){
-  return BASE+'/exams/'+encodeURIComponent(ID)+'/results/'+encodeURIComponent(name)+'?key='+KEY;
+function docUrl(key){
+  return BASE+'/exams/'+encodeURIComponent(ID)+'/results/'+encodeURIComponent(key)+'?key='+KEY;
 }
+/* في v2 يصير المعرّف s<رقم> فلا يظهر اسم الطالب في القاعدة إطلاقاً */
+function myDocKey(){ return (V2 && state.idx>=0) ? ('s'+state.idx) : state.name; }
 function nameTaken(name){
   return fetch(docUrl(name)).then(function(r){
     if(r.status===200) return r.json().then(function(j){return !!(j&&j.fields);});
@@ -328,7 +367,7 @@ function nameTaken(name){
   });
 }
 function sendResult(p){
-  return fetch(docUrl(p.name),{
+  return fetch(docUrl(myDocKey()),{
     method:'PATCH',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(toFields(p))
@@ -380,7 +419,7 @@ if(_eid){
     if(j&&j.error) throw new Error(j.error.message||'خطأ');
     var pl=j.fields&&j.fields.payload&&j.fields.payload.stringValue;
     if(!pl) throw new Error('الاختبار غير موجود');
-    boot(JSON.parse(pl));
+    return openPayload(pl).then(boot);
   }).catch(function(e){
     app('<div class="card center"><div class="emoji">⚠️</div><h1>تعذّر تحميل الاختبار</h1><p class="meta">تأكد من اتصال الإنترنت ثم أعد فتح الرابط.<br><span style="font-size:11px;opacity:.7">('+E(String(e&&e.message||e))+')</span></p></div>');
   });
