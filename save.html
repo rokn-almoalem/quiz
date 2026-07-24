@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#3d8268"><title>حفظ الاختبار — ركن المعلم</title>
+<meta name="theme-color" content="#ef7d3b"><title>حفظ الاختبار — ركن المعلم</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:'Segoe UI',Tahoma,system-ui,sans-serif;background:#eef1f5;color:#16263d;line-height:1.6;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:18px}
@@ -28,16 +28,20 @@ var QUIZ="https://rokn-almoalem.github.io/quiz/index.html";
 function $(i){return document.getElementById(i);}
 function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
 
-/* يستقبل: #<base64 للـ pack>  →  يحفظ في exams/{id}  →  يعرض الرابط القصير */
+/* يستقبل: #<base64 للحزمة>[&k=<مفتاح>]  →  يحفظ في exams/{id}  →  يعرض الرابط القصير
+   المفتاح يبقى خارج الحزمة دائماً — فلا يمكن أن يُرفع مع البيانات إطلاقاً */
 function decodeHash(){
   var h=location.hash.slice(1);
   if(!h) return null;
+  var first=h.split('&')[0];
   try{
-    var b64=h.replace(/-/g,'+').replace(/_/g,'/'); while(b64.length%4)b64+='=';
+    var b64=first.replace(/-/g,'+').replace(/_/g,'/'); while(b64.length%4)b64+='=';
     return JSON.parse(decodeURIComponent(escape(atob(b64))));
   }catch(e){ return null; }
 }
+function hashKey(){ var m=/[#&]k=([^&]+)/.exec(location.hash); return m?decodeURIComponent(m[1]):''; }
 var PACK=decodeHash();
+var QKEY=hashKey();
 if(!PACK || !PACK.id){
   $('app').innerHTML='<div class="emoji">⚠️</div><h1 class="err">لا يوجد اختبار</h1><p>افتح هذه الصفحة من زر المشاركة في التطبيق فقط.</p>';
 } else {
@@ -47,7 +51,7 @@ if(!PACK || !PACK.id){
     body:JSON.stringify({fields:{payload:{stringValue:JSON.stringify(PACK)}}})})
     .then(function(r){ if(r.ok) return true; return r.json().then(function(j){ throw new Error((j&&j.error&&j.error.message)||('HTTP '+r.status)); }); })
     .then(function(){
-      var short=QUIZ+'?e='+encodeURIComponent(id);
+      var short=QUIZ+'?e='+encodeURIComponent(id)+(QKEY?('#k='+encodeURIComponent(QKEY)):'');
       var hdr="📝 اختبار إلكتروني\n"+(PACK.g?("🏫 "+PACK.g+"\n"):"")+"📚 "+(PACK.ti||"اختبار")+"\n"+(PACK.su?("📖 المادة: "+PACK.su+"\n"):"")+(PACK.te?("👤 "+PACK.te+"\n"):"");
       var msg=hdr+"━━━━━━━━━━\nرابط الحل 👇\n"+short;
       var wa="https://wa.me/?text="+encodeURIComponent(msg);
