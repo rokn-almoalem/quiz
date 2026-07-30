@@ -64,6 +64,17 @@ select,input{width:100%;padding:12px;border:1.5px solid var(--line);border-radiu
 .spin{width:34px;height:34px;border:4px solid #e2e8f0;border-top-color:var(--green2);border-radius:50%;animation:sp .8s linear infinite;margin:6px auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 :focus-visible{outline:3px solid rgba(42,157,143,.5);outline-offset:2px}
+/* ===== زر القطعة ونافذتها ===== */
+.pbtn{display:flex;align-items:center;gap:8px;width:100%;text-align:right;border:1.5px solid var(--orange);background:#fdf0e3;color:#8a5a1e;border-radius:12px;padding:11px 13px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:10px}
+.phint{font-size:12.5px;color:var(--muted);background:var(--soft);border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.75}
+.pvbg{position:fixed;inset:0;background:rgba(22,38,61,.55);z-index:10000;display:none;align-items:center;justify-content:center;padding:14px}
+.pvbg.on{display:flex}
+.pvbox{background:var(--card);border-radius:16px;width:100%;max-width:600px;max-height:84vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.32)}
+.pvhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.pvhead b{font-size:15px}
+.pvx{border:none;background:var(--soft);color:var(--ink);border-radius:10px;width:36px;height:36px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;flex:0 0 auto}
+.pvbody{overflow:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.pvbody .passage{margin-bottom:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -210,7 +221,7 @@ function screenConfirm(){
     +'<button class="btn" id="go">نعم، ابدأ</button>'
     +'<button class="btn ghost" onclick="location.reload()">تغيير الاسم</button>'
     +'</div>');
-  $('go').onclick=function(){ state.i=0; renderQ(); startTimer(); };
+  $('go').onclick=function(){ var f=firstQ(); if(f<0){ screenNoExam(); return; } state.i=f; renderQ(); startTimer(); };
 }
 
 function renderQ(){
@@ -224,20 +235,26 @@ function renderQ(){
     +'<div class="qtop"><span class="qn">'+(human?('السؤال '+human+' من '+GRADABLE.length):'قراءة')+'</span>'
     +(q[5]?'<span class="chip">'+E(q[5])+'</span>':'')+'</div>';
 
-  if(type===2){
-    body='<div class="passage">'+E(q[1])+'</div>';
-  } else if(type===0){
-    body='<div class="qtext">'+E(q[1])+'</div>'
+  var pas=passageOf(state.i);
+  if(pas){
+    body+='<button class="pbtn" id="pbtn"><span>📄</span>'
+       +'<span style="flex:1">'+(pas[5]?E(pas[5]):'القطعة')+' — اضغط للقراءة</span><span>‹</span></button>';
+    if(state.i===firstPassageQ()){
+      body+='<div class="phint">💡 هذا السؤال عن قطعة. اضغط الزر أعلاه لقراءتها، ثم أغلقها وأجب. تقدر تفتحها في أي وقت وإجابتك محفوظة.</div>';
+    }
+  }
+  if(type===0){
+    body+='<div class="qtext">'+E(q[1])+'</div>'
       +optBtn(1,'✔️ صح')+optBtn(0,'❌ خطأ');
   } else if(type===1){
-    body='<div class="qtext">'+E(q[1])+'</div>';
+    body+='<div class="qtext">'+E(q[1])+'</div>';
     var options=q[2]||[];
     options.forEach(function(op,k){ body+=optBtn(k,E(op)); });
   }
 
-  var isLast=state.i>=Q.length-1;
+  var isLast=nextQ(state.i)<0;
   var nav='<div class="row" style="margin-top:16px">'
-    +(state.i>0?'<button class="btn ghost" id="prev">‹ السابق</button>':'')
+    +(prevQ(state.i)>=0?'<button class="btn ghost" id="prev">‹ السابق</button>':'')
     +(isLast
        ? '<button class="btn orange" id="submit">تسليم الاختبار</button>'
        : '<button class="btn" id="next">التالي ›</button>')
@@ -251,9 +268,10 @@ function renderQ(){
       renderQ();
     };
   });
-  if($('prev')) $('prev').onclick=function(){ state.i--; renderQ(); };
-  if($('next')) $('next').onclick=function(){ state.i++; renderQ(); };
-  if($('submit')) $('submit').onclick=trySubmit;
+  if($('pbtn')) $('pbtn').onclick=function(){ openPV(pas[5],pas[1]); };
+  if($('prev')) $('prev').onclick=function(){ closePV(); state.i=prevQ(state.i); renderQ(); };
+  if($('next')) $('next').onclick=function(){ closePV(); state.i=nextQ(state.i); renderQ(); };
+  if($('submit')) $('submit').onclick=function(){ closePV(); trySubmit(); };
 }
 
 function optBtn(val,label){
@@ -266,6 +284,34 @@ function humanNumber(idx){
   for(var j=0;j<=idx;j++){ if(Q[j][0]!==2) n++; }
   return n;
 }
+
+/* ===== القطعة: زر فوق السؤال يفتحها في نافذة ===== */
+/* قطعة السؤال = أقرب قطعة قبله في الترتيب (كما في تعليمة التطبيق) */
+function passageOf(idx){ for(var j=idx-1;j>=0;j--){ if(Q[j][0]===2) return Q[j]; } return null; }
+/* التنقّل يتخطّى القطع — لا يقف الطالب على شاشة قطعة إطلاقاً */
+function nextQ(from){ for(var j=from+1;j<Q.length;j++){ if(Q[j][0]!==2) return j; } return -1; }
+function prevQ(from){ for(var j=from-1;j>=0;j--){ if(Q[j][0]!==2) return j; } return -1; }
+function firstQ(){ return nextQ(-1); }
+/* أوّل سؤال له قطعة — عنده يظهر شرح الاستخدام مرة واحدة */
+function firstPassageQ(){ for(var j=0;j<Q.length;j++){ if(Q[j][0]!==2 && passageOf(j)) return j; } return -1; }
+function ensurePV(){
+  if($('pv')) return;
+  var d=document.createElement('div');
+  d.id='pv'; d.className='pvbg';
+  d.innerHTML='<div class="pvbox"><div class="pvhead"><b id="pvttl">📄 القطعة</b>'
+    +'<button class="pvx" id="pvx" aria-label="إغلاق">✕</button></div>'
+    +'<div class="pvbody"><div class="passage" id="pvtext"></div></div></div>';
+  document.body.appendChild(d);
+  d.onclick=function(e){ if(e.target===d) closePV(); };
+  $('pvx').onclick=closePV;
+}
+function openPV(title,text){
+  ensurePV();
+  $('pvttl').textContent='📄 '+(title||'القطعة');
+  $('pvtext').textContent=String(text==null?'':text);
+  $('pv').classList.add('on');
+}
+function closePV(){ var d=$('pv'); if(d) d.classList.remove('on'); }
 
 var _submitted=false, _timerInt=null;
 function trySubmit(){
